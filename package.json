@@ -22,8 +22,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "TU_USUARIO",
-        "repo": "NOMBRE_DEL_REPOSITORIO"
+        "owner": "YaelPerez",
+        "repo": "electron_prueba_1"
       }
     ],
     "win": {
