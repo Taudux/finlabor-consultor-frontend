@@ -1,45 +1,57 @@
-// main.js
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { autoUpdater } = require('electron-updater');
 
-// Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
-const path = require('node:path')
+let mainWindow;
 
-const createWindow = () => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+function createWindow () {
+  mainWindow = new BrowserWindow({
+    width: 800, height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: `${__dirname}/preload.js`,
+      nodeIntegration: false,
+      contextIsolation: true
     }
-  })
+  });
 
-  // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile('index.html');
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  // Al iniciar, buscar actualizaciones
+  autoUpdater.checkForUpdates();
+
+  mainWindow.on('closed', () => mainWindow = null);
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  createWindow()
+// Configura autoUpdater
+autoUpdater.autoDownload = false;
 
-  app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+autoUpdater.on('update-available', (info) => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Actualización disponible',
+    message: 'Hay una nueva versión disponible. ¿Quieres descargarla ahora?',
+    buttons: ['Sí', 'No']
+  }).then(result => {
+    if (result.response === 0) {
+      autoUpdater.downloadUpdate();
+    }
+  });
+});
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+autoUpdater.on('update-downloaded', () => {
+  dialog.showMessageBox({
+    title: 'Actualización lista',
+    message: 'La actualización se descargó. ¿Deseas reiniciar y aplicar la actualización ahora?',
+    buttons: ['Sí', 'Más tarde']
+  }).then(result => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+});
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+app.on('ready', createWindow);
+
+// Permitir búsqueda manual desde el renderer
+ipcMain.handle('buscar-actualizaciones', async () => {
+  autoUpdater.checkForUpdates();
+});
