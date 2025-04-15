@@ -82,17 +82,11 @@ function createWindow() {
   });
 }
 
-// URL directa al archivo latest.yml de tu repositorio
-const feedURL = 'https://github.com/YaelPerez/electron_prueba_1/releases/latest/download/latest.yml';
-
 app.whenReady().then(() => {
   createWindow();
 
-  // Forzar el uso del feed manual
-  autoUpdater.setFeedURL({ url: feedURL });
-
   setTimeout(() => {
-    log.info('🟢 Forzando búsqueda de actualizaciones con setFeedURL...');
+    log.info('🟢 Buscando actualizaciones al iniciar...');
     autoUpdater.checkForUpdates();
   }, 500);
 });
