@@ -9,7 +9,7 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
 
-// Configuración del autoUpdater
+// Configurar autoUpdater
 autoUpdater.autoDownload = false;
 
 // Eventos del autoUpdater
@@ -82,18 +82,22 @@ function createWindow() {
   });
 }
 
-// Esperar a que Electron esté completamente listo
+// URL directa al archivo latest.yml de tu repositorio
+const feedURL = 'https://github.com/YaelPerez/electron_prueba_1/releases/latest/download/latest.yml';
+
 app.whenReady().then(() => {
   createWindow();
 
-  // Esperar unos milisegundos para garantizar carga completa
+  // Forzar el uso del feed manual
+  autoUpdater.setFeedURL({ url: feedURL });
+
   setTimeout(() => {
-    log.info('🟢 Iniciando búsqueda de actualizaciones (desde whenReady)...');
+    log.info('🟢 Forzando búsqueda de actualizaciones con setFeedURL...');
     autoUpdater.checkForUpdates();
   }, 500);
 });
 
-// Permitir búsqueda manual desde el renderer
+// Búsqueda manual desde botón en la UI
 ipcMain.handle('buscar-actualizaciones', async () => {
   log.info('📎 Búsqueda manual de actualizaciones activada.');
   autoUpdater.checkForUpdates();
