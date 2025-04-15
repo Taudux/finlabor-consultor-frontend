@@ -9,28 +9,6 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      preload: `${__dirname}/preload.js`,
-      nodeIntegration: false,
-      contextIsolation: true
-    }
-  });
-
-  mainWindow.loadFile('index.html');
-
-  // Buscar actualizaciones al iniciar
-  log.info('🔍 Buscando actualizaciones al iniciar...');
-  autoUpdater.checkForUpdates();
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
-
 // Configuración del autoUpdater
 autoUpdater.autoDownload = false;
 
@@ -86,7 +64,34 @@ autoUpdater.on('update-downloaded', () => {
   });
 });
 
-app.on('ready', createWindow);
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: `${__dirname}/preload.js`,
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  mainWindow.loadFile('index.html');
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+// Esperar a que Electron esté completamente listo
+app.whenReady().then(() => {
+  createWindow();
+
+  // Esperar unos milisegundos para garantizar carga completa
+  setTimeout(() => {
+    log.info('🟢 Iniciando búsqueda de actualizaciones (desde whenReady)...');
+    autoUpdater.checkForUpdates();
+  }, 500);
+});
 
 // Permitir búsqueda manual desde el renderer
 ipcMain.handle('buscar-actualizaciones', async () => {
