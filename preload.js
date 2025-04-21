@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld('api', {
   buscarActualizaciones: () => ipcRenderer.invoke('buscar-actualizaciones'),
-  runPythonScript: () => ipcRenderer.invoke('run-python-script')
+  runPythonScript: () => ipcRenderer.invoke('runPythonScript')
 });
