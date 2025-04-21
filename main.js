@@ -93,6 +93,7 @@ ipcMain.handle('run-python-script', async () => {
   let result = '';
   python.stdout.on('data', (data) => {
     result += data.toString();
+    log.info(`📤 Recibido de Python: ${data.toString()}`);  // Línea clave para depurar
   });
 
   python.stderr.on('data', (data) => {
@@ -102,8 +103,7 @@ ipcMain.handle('run-python-script', async () => {
   python.on('close', () => {
     log.info(`✅ Resultado del script: ${result}`);
     dialog.showMessageBox({
-      title: 'Resultado desde Python',
-      message: result
+      message: result.trim()
     });
   });
 });
