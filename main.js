@@ -1,26 +1,23 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
+const path = require('path');
 
 let mainWindow;
 
-// Configurar logging
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
 
-// Configurar autoUpdater
 autoUpdater.autoDownload = false;
 
-// Eventos del autoUpdater
 autoUpdater.on('checking-for-update', () => {
   log.info('🔄 Buscando actualizaciones...');
 });
 
 autoUpdater.on('update-available', (info) => {
   log.info('📦 Actualización disponible:', info);
-
   dialog.showMessageBox({
     type: 'info',
     title: 'Actualización disponible',
@@ -30,13 +27,11 @@ autoUpdater.on('update-available', (info) => {
     if (result.response === 0) {
       log.info('⬇️ Iniciando descarga de la actualización...');
       autoUpdater.downloadUpdate();
-    } else {
-      log.info('⏩ Usuario rechazó la actualización por ahora.');
     }
   });
 });
 
-autoUpdater.on('update-not-available', (info) => {
+autoUpdater.on('update-not-available', () => {
   log.info('✅ No hay actualizaciones disponibles.');
 });
 
@@ -50,17 +45,13 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', () => {
   log.info('✅ Actualización descargada.');
-
   dialog.showMessageBox({
     title: 'Actualización lista',
-    message: 'La actualización se descargó. ¿Deseas reiniciar y aplicar la actualización ahora?',
+    message: '¿Deseas reiniciar para aplicar la actualización?',
     buttons: ['Sí', 'Más tarde']
   }).then(result => {
     if (result.response === 0) {
-      log.info('🚀 Reiniciando para instalar la actualización...');
       autoUpdater.quitAndInstall();
-    } else {
-      log.info('🕒 Usuario decidió actualizar después.');
     }
   });
 });
@@ -70,7 +61,7 @@ function createWindow() {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: `${__dirname}/preload.js`,
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true
     }
@@ -85,36 +76,34 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-
   setTimeout(() => {
     log.info('🟢 Buscando actualizaciones al iniciar...');
     autoUpdater.checkForUpdates();
   }, 500);
 });
 
-// Búsqueda manual desde botón en la UI
 ipcMain.handle('buscar-actualizaciones', async () => {
   log.info('📎 Búsqueda manual de actualizaciones activada.');
   autoUpdater.checkForUpdates();
 });
 
-// Ejecutar suma.py desde botón en la UI
-ipcMain.handle('ejecutar-suma-python', async () => {
-  return new Promise((resolve, reject) => {
-    exec('python suma.py', (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error al ejecutar Python: ${error.message}`);
-        dialog.showErrorBox('Error', 'Ocurrió un error al ejecutar el script de Python.');
-        return reject(error);
-      }
+ipcMain.handle('run-python-script', async () => {
+  const python = spawn('python', [path.join(__dirname, 'suma.py')]);
 
-      dialog.showMessageBox({
-        type: 'info',
-        title: 'Resultado',
-        message: stdout.trim() || 'No se obtuvo resultado del script.'
-      });
+  let result = '';
+  python.stdout.on('data', (data) => {
+    result += data.toString();
+  });
 
-      resolve();
+  python.stderr.on('data', (data) => {
+    log.error(`❌ Error del script Python: ${data}`);
+  });
+
+  python.on('close', () => {
+    log.info(`✅ Resultado del script: ${result}`);
+    dialog.showMessageBox({
+      title: 'Resultado desde Python',
+      message: result
     });
   });
 });
