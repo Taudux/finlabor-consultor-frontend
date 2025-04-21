@@ -1,6 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
+const { exec } = require('child_process');
 
 let mainWindow;
 
@@ -95,4 +96,25 @@ app.whenReady().then(() => {
 ipcMain.handle('buscar-actualizaciones', async () => {
   log.info('📎 Búsqueda manual de actualizaciones activada.');
   autoUpdater.checkForUpdates();
+});
+
+// Ejecutar suma.py desde botón en la UI
+ipcMain.handle('ejecutar-suma-python', async () => {
+  return new Promise((resolve, reject) => {
+    exec('python suma.py', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error al ejecutar Python: ${error.message}`);
+        dialog.showErrorBox('Error', 'Ocurrió un error al ejecutar el script de Python.');
+        return reject(error);
+      }
+
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Resultado',
+        message: stdout.trim() || 'No se obtuvo resultado del script.'
+      });
+
+      resolve();
+    });
+  });
 });
