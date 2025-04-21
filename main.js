@@ -3,6 +3,7 @@ const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 const path = require('path');
 const { spawn } = require('child_process');
+const isDev = require('electron-is-dev');
 
 let mainWindow;
 
@@ -12,6 +13,7 @@ autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
 autoUpdater.autoDownload = false;
 
+// Eventos autoUpdater
 autoUpdater.on('checking-for-update', () => log.info('🔄 Buscando actualizaciones...'));
 autoUpdater.on('update-available', (info) => {
   log.info('📦 Actualización disponible:', info);
@@ -80,7 +82,11 @@ ipcMain.handle('buscar-actualizaciones', async () => {
 
 // ✅ IPC para ejecutar script Python
 ipcMain.handle('runPythonScript', async () => {
-  const pythonProcess = spawn('python', [path.join(__dirname, 'suma.py')]);
+  const scriptPath = isDev
+    ? path.join(__dirname, 'python_scripts', 'suma.py')
+    : path.join(process.resourcesPath, 'python_scripts', 'suma.py');
+
+  const pythonProcess = spawn('python', [scriptPath]);
 
   let output = '';
   pythonProcess.stdout.on('data', (data) => {
