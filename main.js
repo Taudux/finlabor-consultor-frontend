@@ -1,21 +1,18 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
-const { exec } = require('child_process');
 const path = require('path');
+const { spawn } = require('child_process');
 
 let mainWindow;
 
-// Configurar logging
+// Logging
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
-
 autoUpdater.autoDownload = false;
 
-autoUpdater.on('checking-for-update', () => {
-  log.info('🔄 Buscando actualizaciones...');
-});
+autoUpdater.on('checking-for-update', () => log.info('🔄 Buscando actualizaciones...'));
 autoUpdater.on('update-available', (info) => {
   log.info('📦 Actualización disponible:', info);
   dialog.showMessageBox({
@@ -25,27 +22,28 @@ autoUpdater.on('update-available', (info) => {
     buttons: ['Sí', 'No']
   }).then(result => {
     if (result.response === 0) {
+      log.info('⬇️ Iniciando descarga de la actualización...');
       autoUpdater.downloadUpdate();
+    } else {
+      log.info('⏩ Usuario rechazó la actualización por ahora.');
     }
   });
 });
-autoUpdater.on('update-not-available', () => {
-  log.info('✅ No hay actualizaciones disponibles.');
-});
-autoUpdater.on('error', (err) => {
-  log.error('❌ Error en autoUpdater:', err);
-});
-autoUpdater.on('download-progress', (progressObj) => {
-  log.info(`📥 Descargando... ${Math.round(progressObj.percent)}%`);
-});
+autoUpdater.on('update-not-available', () => log.info('✅ No hay actualizaciones disponibles.'));
+autoUpdater.on('error', err => log.error('❌ Error en autoUpdater:', err));
+autoUpdater.on('download-progress', progress => log.info(`📥 Descargando... ${Math.round(progress.percent)}%`));
 autoUpdater.on('update-downloaded', () => {
+  log.info('✅ Actualización descargada.');
   dialog.showMessageBox({
     title: 'Actualización lista',
     message: 'La actualización se descargó. ¿Deseas reiniciar y aplicar la actualización ahora?',
     buttons: ['Sí', 'Más tarde']
   }).then(result => {
     if (result.response === 0) {
+      log.info('🚀 Reiniciando para instalar la actualización...');
       autoUpdater.quitAndInstall();
+    } else {
+      log.info('🕒 Usuario decidió actualizar después.');
     }
   });
 });
@@ -56,48 +54,57 @@ function createWindow() {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
   mainWindow.loadFile('index.html');
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  mainWindow.on('closed', () => { mainWindow = null });
 }
 
 app.whenReady().then(() => {
   createWindow();
+
   setTimeout(() => {
+    log.info('🟢 Buscando actualizaciones al iniciar...');
     autoUpdater.checkForUpdates();
   }, 500);
 });
 
+// 🔁 IPC para buscar actualizaciones
 ipcMain.handle('buscar-actualizaciones', async () => {
+  log.info('📎 Búsqueda manual de actualizaciones activada.');
   autoUpdater.checkForUpdates();
 });
 
-ipcMain.handle('ejecutar-python', async () => {
-  const pythonScript = path.join(__dirname, 'suma.py');
+// ✅ IPC para ejecutar script Python
+ipcMain.handle('runPythonScript', async () => {
+  const pythonProcess = spawn('python', [path.join(__dirname, 'suma.py')]);
 
-  return new Promise((resolve, reject) => {
-    exec(`python "${pythonScript}"`, (error, stdout, stderr) => {
-      if (error) {
-        log.error('Error ejecutando Python:', error);
-        dialog.showErrorBox('Error', 'No se pudo ejecutar el script de Python.');
-        return reject(error);
-      }
+  let output = '';
+  pythonProcess.stdout.on('data', (data) => {
+    output += data.toString();
+  });
 
-      const output = stdout.trim();
-      log.info('✅ Resultado desde Python:', output);
+  pythonProcess.stderr.on('data', (data) => {
+    log.error('⚠️ Error en script Python:', data.toString());
+  });
+
+  pythonProcess.on('close', (code) => {
+    log.info(`🔚 Proceso Python finalizó con código ${code}`);
+    if (output.trim()) {
       dialog.showMessageBox({
         type: 'info',
-        title: 'Resultado desde Python',
-        message: output || 'Sin resultado'
+        title: 'Resultado de Python',
+        message: output.trim()
       });
-
-      resolve(output);
-    });
+    } else {
+      dialog.showMessageBox({
+        type: 'warning',
+        title: 'Sin respuesta',
+        message: 'El script no devolvió ninguna salida.'
+      });
+    }
   });
 });
