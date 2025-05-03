@@ -14,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (runPythonBtn) {
     runPythonBtn.addEventListener('click', async () => {
       try {
-        const response = await fetch('https://render-prueba-backend1.onrender.com/sumar');
+        const response = await fetch('https://render-prueba-backend1.onrender.com/generar_excel');
         const data = await response.json();
         alert(data.mensaje);
       } catch (error) {
