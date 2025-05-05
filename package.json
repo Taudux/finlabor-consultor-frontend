@@ -24,12 +24,12 @@
   },
   "build": {
     "appId": "com.tuempresa.miapp",
-    "productName": "Consultor de prueba",
+    "productName": "Consultor de reporte de credito",
     "publish": [
       {
         "provider": "github",
         "owner": "YaelPerez",
-        "repo": "electron_prueba_1"
+        "repo": "finlabor-consultor-frontend"
       }
     ],
     "extraFiles": [
