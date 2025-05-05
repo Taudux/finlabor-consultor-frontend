@@ -1,71 +1,94 @@
-# electron_prueba_1
 
-Aplicación de escritorio desarrollada con [Electron](https://www.electronjs.org/) que implementa actualizaciones automáticas utilizando `electron-builder` y `electron-updater`.
+# finlabor-consultor-frontend
 
-## 🚀 Características
+Aplicación de escritorio desarrollada con [Electron](https://www.electronjs.org/) para el análisis y consulta crediticia, con actualizaciones automáticas implementadas mediante `electron-builder` y `electron-updater`.
 
-- Aplicación multiplataforma con interfaz de escritorio
-- Sistema de actualizaciones automáticas a través de [GitHub Releases](https://docs.github.com/es/repositories/releasing-projects-on-github/about-releases)
-- Empaquetado con `electron-builder`
-- Registro detallado de eventos con `electron-log`
+## 🚀 Características principales
 
-## ⚙️ Instalación
+- Aplicación multiplataforma con interfaz moderna
+- Sistema de **actualizaciones automáticas** mediante [GitHub Releases](https://docs.github.com/es/repositories/releasing-projects-on-github/about-releases)
+- Backend en FastAPI para procesamiento de archivos Excel
+- Integración de scripts Python dentro del instalador
+- Empaquetado y distribución con `electron-builder`
+- Registro detallado de eventos mediante `electron-log`
+
+## 🏗️ Instalación y ejecución local
 
 1. Clona este repositorio:
 
-```bash
-git clone https://github.com/YaelPerez/electron_prueba_1.git
-cd electron_prueba_1
-```
+   ```bash
+   git clone https://github.com/Taudux/finlabor-consultor-frontend.git
+   cd finlabor-consultor-frontend
+   ```
 
 2. Instala las dependencias:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. Ejecuta la aplicación en modo desarrollo:
 
-```bash
-npm start
-```
+   ```bash
+   npm start
+   ```
 
-## 🛠️ Construcción de la app
+> 📝 Recuerda que en modo desarrollo no se ejecutan las actualizaciones automáticas.
 
-Para generar el instalador y los archivos necesarios para publicar una versión:
+## 🛠️ Generar instalador
+
+Para compilar la aplicación y generar el instalador ejecutable:
 
 ```bash
 npm run build
 ```
 
-Esto generará los artefactos en la carpeta `dist/`.
+Esto creará los archivos necesarios dentro de la carpeta `/dist`, incluyendo:
+
+- `Consultor de prueba-Setup-1.3.0.exe`
+- `Consultor de prueba-Setup-1.3.0.exe.blockmap`
+- `latest.yml`
+
+⚠️ Asegúrate de cambiar la versión en `package.json` cada vez que publiques una nueva versión.
 
 ## 🔄 Actualizaciones automáticas
 
-Esta aplicación implementa un sistema de actualizaciones automáticas. Cuando se publica una nueva versión en GitHub Releases con los archivos requeridos (`.exe`, `latest.yml`, `.blockmap`), la app detecta si hay una nueva versión y permite al usuario descargarla e instalarla.
+La app verifica actualizaciones automáticamente al iniciarse, y también puedes forzar la búsqueda manual desde la interfaz.
 
-### Requisitos para el sistema de actualizaciones:
+Para habilitar las actualizaciones automáticas, debes:
 
-- El repositorio debe ser **público**
-- Los artefactos del release deben incluir:
-  - `nombre-app-Setup-x.x.x.exe`
-  - `latest.yml`
-  - `nombre-app-Setup-x.x.x.exe.blockmap`
-- La versión del `package.json` debe coincidir con el número de versión del release
+✅ Crear un **release en GitHub** subiendo los siguientes archivos de `/dist`:
+
+- `Consultor de prueba-Setup-1.x.x.exe`
+- `Consultor de prueba-Setup-1.x.x.exe.blockmap`
+- `latest.yml`
+
+La versión de `package.json` debe coincidir con la del tag del release.
 
 ## 📦 Configuración en `package.json`
+
+La configuración de `electron-builder` se encuentra en la propiedad `build`:
 
 ```json
 "build": {
   "appId": "com.tuempresa.miapp",
+  "productName": "Consultor de reporte de credito",
   "publish": [
     {
       "provider": "github",
-      "owner": "YaelPerez",
-      "repo": "electron_prueba_1"
+      "owner": "Taudux",
+      "repo": "finlabor-consultor-frontend"
+    }
+  ],
+  "extraFiles": [
+    {
+      "from": "python_scripts",
+      "to": "python_scripts",
+      "filter": ["**/*.py"]
     }
   ],
   "win": {
+    "icon": "build/finlabor_logo-removebg-preview.ico",
     "target": "nsis",
     "artifactName": "${productName}-Setup-${version}.${ext}"
   }
@@ -75,14 +98,15 @@ Esta aplicación implementa un sistema de actualizaciones automáticas. Cuando s
 ## 📁 Estructura básica del proyecto
 
 ```
-electron_prueba_1/
-│
-├── dist/                  # Archivos construidos para release
-├── main.js                # Proceso principal de Electron
-├── preload.js             # Script preload
-├── index.html             # Interfaz de la aplicación
-├── package.json           # Configuración del proyecto
-└── README.md              # Este archivo
+finlabor-consultor-frontend/
+├── dist/                   # Archivos construidos para release
+├── main.js                 # Proceso principal de Electron
+├── preload.js              # Script preload
+├── renderer.js             # Lógica del frontend
+├── index.html              # Interfaz de la aplicación
+├── python_scripts/         # Scripts Python incluidos
+├── package.json            # Configuración del proyecto
+└── README.md               # Este archivo
 ```
 
 ## 👤 Autor
@@ -90,7 +114,11 @@ electron_prueba_1/
 **Yael Pérez**  
 GitHub: [@YaelPerez](https://github.com/YaelPerez)
 
+## 📢 Notas finales
 
+- El repositorio debe ser **público** para que `electron-updater` funcione correctamente mediante GitHub Releases.
+- Si requieres actualizaciones automáticas con repositorios privados, consulta la documentación de tokens de GitHub.
 
+---
 
-
+¡Gracias por usar Finlabor Consultor! 🚀
