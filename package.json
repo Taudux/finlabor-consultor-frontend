@@ -42,7 +42,7 @@
       }
     ],
     "win": {
-      "icon": "build/finlabor_logo_removebg-preview.ico",
+      "icon": "build/finlabor_logo-removebg-preview.ico",
       "target": "nsis",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     }
