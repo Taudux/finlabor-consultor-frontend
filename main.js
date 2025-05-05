@@ -4,6 +4,10 @@ const log = require('electron-log');
 const path = require('path');
 const { spawn } = require('child_process');
 const isDev = !app.isPackaged;
+const fs = require('fs');
+const https = require('https');
+const { fetch, FormData } = require('undici');
+const { Blob } = require('buffer');  // Importa Blob de Node.js
 
 let mainWindow;
 
@@ -52,8 +56,12 @@ autoUpdater.on('update-downloaded', () => {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 480,
+    height: 700,
+    minWidth: 320,
+    minHeight: 500,
+    resizable: true,
+    icon: path.join(__dirname, 'assets', 'build/finlabor_logo-removebg-preview.png'), // ruta de icono
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -61,6 +69,7 @@ function createWindow() {
     }
   });
 
+  mainWindow.setMenu(null); // OCULTA la barra de menú
   mainWindow.loadFile('index.html');
   mainWindow.on('closed', () => { mainWindow = null });
 }
@@ -113,4 +122,117 @@ ipcMain.handle('runPythonScript', async () => {
       });
     }
   });
+});
+
+// IPC para descargar Excel
+ipcMain.handle('generar-excel', async () => {
+  const url = 'https://render-prueba-backend1.onrender.com/generar_excel';
+
+  const savePath = dialog.showSaveDialogSync({
+    title: 'Guardar archivo Excel',
+    defaultPath: 'archivo_generado.xlsx',
+    filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
+  });
+
+  if (!savePath) return { cancelado: true };
+
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(savePath);
+    https.get(url, (response) => {
+      if (response.statusCode !== 200) {
+        fs.unlink(savePath, () => { });
+        return reject(new Error(`HTTP status ${response.statusCode}`));
+      }
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close();
+        resolve({ success: true });
+      });
+    }).on('error', (err) => {
+      fs.unlink(savePath, () => { });
+      reject(err);
+    });
+  }).catch((err) => {
+    console.error('Error al descargar el archivo:', err);
+    return { error: err.message };
+  });
+});
+
+ipcMain.handle('select-excel-file', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    const filePath = result.filePaths[0];
+    const dir = path.dirname(filePath);
+    const ext = path.extname(filePath);
+    const base = path.basename(filePath, ext);
+    const newFileName = `${base}_Consulta${ext}`;
+    const outputPath = path.join(dir, newFileName);
+
+    console.log('Archivo seleccionado:', filePath);
+    // console.log('Archivo resultado:', outputPath);
+
+    return { filePath, outputPath };
+  }
+
+  return null;
+});
+
+ipcMain.handle('guardar-archivo-procesado', async (event, outputFilePath, arrayBufferBase64) => {
+  try {
+    const buffer = Buffer.from(arrayBufferBase64, 'base64');
+    fs.writeFileSync(outputFilePath, buffer);
+    return { success: true };
+  } catch (err) {
+    console.error('Error guardando archivo procesado:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) => {
+  try {
+    // const filePath = result.filePaths[0];
+    const dir = path.dirname(filePath);
+    const ext = path.extname(filePath);
+    const base = path.basename(filePath, ext);
+    const outputFileName = `${base}_Consulta${ext}`;
+    const outputFilePath = path.join(dir, outputFileName);
+
+    //console.log('Archivo seleccionado:', filePath);
+    console.log('Archivo resultado:', outputFilePath);
+
+    // Paso 1: Leer archivo
+    const fileBuffer = fs.readFileSync(filePath);
+    const formDataNode = new FormData();
+    formDataNode.append('us', us);
+    formDataNode.append('pw', pw);
+    formDataNode.append('pk', pk);
+    formDataNode.append('ak', ak);
+    const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    formDataNode.append('file', fileBlob, path.basename(filePath));
+
+    // Paso 2: Enviar al backend
+    const response = await fetch('https://render-prueba-backend1.onrender.com/consultar', {
+      method: 'POST',
+      body: formDataNode
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en backend: ${response.status} ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    // Paso 3: Guardar archivo
+    fs.writeFileSync(outputFilePath, Buffer.from(arrayBuffer));
+
+    //console.log("output file path -> ", outputFilePath)
+    return { success: true, outputFilePath };
+  } catch (err) {
+    console.error('Error en procesar-archivo:', err);
+    return { success: false, error: err.message };
+  }
 });

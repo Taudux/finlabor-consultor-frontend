@@ -1,10 +1,51 @@
 <!DOCTYPE html>
-<html>
-<head><title>Mi App</title></head>
-<body style="background-color: #f59e10;">
-  <h1>Hola mundo con Electron</h1>
-  <button id="check-updates">Buscar actualizaciones</button>
-  <button id="run-python">Ejecutar script Python</button>
-  <script src="renderer.js"></script>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consultor de Reporte de Crédito</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/darkly/bootstrap.min.css">
+    <style>
+        body {
+            padding: 2rem;
+        }
+        .form-label {
+            font-weight: bold;
+        }
+        .container {
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <!--<div class="container bg-dark text-light rounded p-4 shadow">-->
+    <div class="d-flex justify-content-center align-items-center min-vh-100">
+      <div class="container bg-dark text-light rounded p-4 shadow col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4 mx-auto">
+        <h2 class="text-center">Consulta de Reporte</h2>
+
+        <div class="mb-3">
+            <label for="usuario" class="form-label">Usuario:</label>
+            <input type="text" id="usuario" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Contraseña:</label>
+            <input type="password" id="password" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label for="privatekey" class="form-label">Private Key:</label>
+            <input type="text" id="privatekey" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label for="apikey" class="form-label">API Key:</label>
+            <input type="text" id="apikey" class="form-control">
+        </div>
+
+        <button id="select-excel" class="btn btn-primary w-100">Seleccionar y procesar Excel</button>
+      </div>
+    </div>
+
+    <script src="./renderer.js"></script>
 </body>
 </html>

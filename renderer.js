@@ -1,26 +1,30 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const checkUpdatesBtn = document.getElementById('check-updates');
-  const runPythonBtn = document.getElementById('run-python');
+document.getElementById('select-excel').addEventListener('click', async () => {
+  const us = document.getElementById('usuario').value;
+  const pw = document.getElementById('password').value;
+  const pk = document.getElementById('privatekey').value;
+  const ak = document.getElementById('apikey').value;
 
-  // Buscar actualizaciones (ya conectado vía IPC con main.js si lo necesitas)
-  if (checkUpdatesBtn) {
-    checkUpdatesBtn.addEventListener('click', async () => {
-      const { ipcRenderer } = require('electron');
-      await ipcRenderer.invoke('buscar-actualizaciones');
-    });
+  if (!us || !pw || !pk || !ak) {
+    alert("Por favor completa todos los campos antes de continuar.");
+    return;
   }
 
-  // Ejecutar suma desde el backend FastAPI en Render (vía HTTPS)
-  if (runPythonBtn) {
-    runPythonBtn.addEventListener('click', async () => {
-      try {
-        const response = await fetch('https://render-prueba-backend1.onrender.com/generar_excel');
-        const data = await response.json();
-        alert(data.mensaje);
-      } catch (error) {
-        console.error('❌ Error al conectar con el backend:', error);
-        alert('No se pudo conectar con el backend.');
-      }
-    });
+  const fileResult = await window.electronAPI.selectExcelFile();
+  if (!fileResult || !fileResult.filePath) {
+    alert('No seleccionaste ningún archivo válido.');
+    return;
+  }
+
+  const { filePath, outputPath } = fileResult;
+
+  console.log("fileResult:", fileResult);
+  console.log("fileResult.filePath:", fileResult.filePath);
+
+  const result = await window.electronAPI.procesarArchivo(filePath, us, pw, pk, ak);
+
+  if (result.success) {
+    alert(`Archivo procesado correctamente y guardado en:\n${result.outputFilePath}`);
+  } else {
+    alert(`Ocurrió un error al procesar el archivo:\n${result.error}`);
   }
 });
