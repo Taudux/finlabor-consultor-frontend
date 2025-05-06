@@ -134,7 +134,7 @@ ipcMain.handle('runPythonScript', async () => {
 
 // IPC para descargar Excel
 ipcMain.handle('generar-excel', async () => {
-  const url = 'https://finlabor-consultor-backend.onrender.com/consultar';
+  const url = 'https://render-prueba-backend1.onrender.com/generar_excel';
 
   const savePath = dialog.showSaveDialogSync({
     title: 'Guardar archivo Excel',
@@ -217,7 +217,7 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
     const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     formDataNode.append('file', fileBlob, path.basename(filePath));
 
-    const response = await fetch('https://render-prueba-backend1.onrender.com/consultar', {
+    const response = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', {
       method: 'POST',
       body: formDataNode
     });
