@@ -5,12 +5,14 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder --publish always",
+    "build:token": "cross-env GH_TOKEN=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 electron-builder --publish always"
   },
   "author": "Yael Perez",
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",
+    "cross-env": "^7.0.3",
     "electron": "^32.0.1",
     "electron-builder": "^26.0.12"
   },
