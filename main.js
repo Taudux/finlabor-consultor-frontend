@@ -134,7 +134,7 @@ ipcMain.handle('runPythonScript', async () => {
 
 // IPC para descargar Excel
 ipcMain.handle('generar-excel', async () => {
-  const url = 'https://render-prueba-backend1.onrender.com/generar_excel';
+  const url = 'https://finlabor-consultor-backend.onrender.com/consultar';
 
   const savePath = dialog.showSaveDialogSync({
     title: 'Guardar archivo Excel',
