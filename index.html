@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Consultor de Reporte de Crédito</title>
@@ -8,35 +9,82 @@
         body {
             padding: 2rem;
         }
+
         .form-label {
             font-weight: bold;
         }
+
+        body {
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE y Edge antiguos */
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari, Opera */
+        }
+
+        html {
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE y Edge antiguos */
+        }
+
+        html::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari, Opera */
+        }
+
         .container {
             max-width: 400px;
         }
+
+        .logo-img {
+            max-width: 100px;
+            height: auto;
+        }
+
+        .move-up {
+            margin-top: -50px;
+        }
+
         /* Overlay loader */
         #overlay {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
             display: none;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             z-index: 9999;
+        }
+
+        #overlay span {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: white;
         }
     </style>
 </head>
+
 <body>
     <!-- Overlay de carga -->
     <div id="overlay">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Procesando...</span>
-        </div>
+        <div class="spinner-border text-light" role="status"></div>
+        <span>Procesando...</span>
     </div>
 
-    <div class="d-flex justify-content-center align-items-center min-vh-100">
-        <div class="container bg-dark text-light rounded p-4 shadow col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4 mx-auto">
+    <div class="d-flex flex-column justify-content-center align-items-center min-vh-100 move-up">
+        <img src="build/finlabor_logo-removebg-preview.png" alt="Logo" class="logo-img mb-3">
+        <div
+            class="container bg-dark text-light rounded p-4 shadow col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4 mx-auto">
             <h2 class="text-center">Consulta de Reporte</h2>
 
             <div class="mb-3">
@@ -59,10 +107,11 @@
                 <input type="text" id="apikey" class="form-control">
             </div>
 
-            <button id="select-excel" class="btn btn-primary w-100">Seleccionar Excel y consultar</button>
+            <button id="select-excel" class="btn btn-primary w-100">Seleccionar Excel y Consultar</button>
         </div>
     </div>
 
     <script src="./renderer.js"></script>
 </body>
+
 </html>
