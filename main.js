@@ -17,6 +17,34 @@ autoUpdater.logger.transports.file.level = 'info';
 log.info('🔧 Aplicación iniciada');
 autoUpdater.autoDownload = false;
 
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 480,
+    height: 700,
+    minWidth: 320,
+    minHeight: 500,
+    resizable: true,
+    icon: path.join(__dirname, 'assets', 'build/finlabor_logo-removebg-preview.png'), // ruta de icono
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  mainWindow.setMenu(null);
+  mainWindow.loadFile('index.html');
+
+  //Ruta del logo para enviarla al renderer
+  const logoPath = path.join(__dirname, 'build', 'finlabor_logo-removebg-preview.png');
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('set-logo', logoPath);
+  });
+
+  mainWindow.on('closed', () => { mainWindow = null });
+}
+
 // Eventos autoUpdater
 autoUpdater.on('checking-for-update', () => log.info('🔄 Buscando actualizaciones...'));
 autoUpdater.on('update-available', (info) => {
@@ -53,26 +81,6 @@ autoUpdater.on('update-downloaded', () => {
     }
   });
 });
-
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 480,
-    height: 700,
-    minWidth: 320,
-    minHeight: 500,
-    resizable: true,
-    icon: path.join(__dirname, 'assets', 'build/finlabor_logo-removebg-preview.png'), // ruta de icono
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  mainWindow.setMenu(null); // OCULTA la barra de menú
-  mainWindow.loadFile('index.html');
-  mainWindow.on('closed', () => { mainWindow = null });
-}
 
 app.whenReady().then(() => {
   createWindow();
@@ -173,8 +181,6 @@ ipcMain.handle('select-excel-file', async () => {
     const outputPath = path.join(dir, newFileName);
 
     console.log('Archivo seleccionado:', filePath);
-    // console.log('Archivo resultado:', outputPath);
-
     return { filePath, outputPath };
   }
 
@@ -194,17 +200,14 @@ ipcMain.handle('guardar-archivo-procesado', async (event, outputFilePath, arrayB
 
 ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) => {
   try {
-    // const filePath = result.filePaths[0];
     const dir = path.dirname(filePath);
     const ext = path.extname(filePath);
     const base = path.basename(filePath, ext);
     const outputFileName = `${base}_Consulta${ext}`;
     const outputFilePath = path.join(dir, outputFileName);
 
-    //console.log('Archivo seleccionado:', filePath);
     console.log('Archivo resultado:', outputFilePath);
 
-    // Paso 1: Leer archivo
     const fileBuffer = fs.readFileSync(filePath);
     const formDataNode = new FormData();
     formDataNode.append('us', us);
@@ -214,7 +217,6 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
     const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     formDataNode.append('file', fileBlob, path.basename(filePath));
 
-    // Paso 2: Enviar al backend
     const response = await fetch('https://render-prueba-backend1.onrender.com/consultar', {
       method: 'POST',
       body: formDataNode
@@ -225,11 +227,8 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
     }
 
     const arrayBuffer = await response.arrayBuffer();
-
-    // Paso 3: Guardar archivo
     fs.writeFileSync(outputFilePath, Buffer.from(arrayBuffer));
 
-    //console.log("output file path -> ", outputFilePath)
     return { success: true, outputFilePath };
   } catch (err) {
     console.error('Error en procesar-archivo:', err);

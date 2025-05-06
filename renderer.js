@@ -1,3 +1,10 @@
+window.electronAPI.onSetLogo((event, logoPath) => {
+  const logoElement = document.getElementById('logo');
+  if (logoElement) {
+    logoElement.src = `file://${logoPath}`;
+  }
+});
+
 document.getElementById('select-excel').addEventListener('click', async () => {
   const us = document.getElementById('usuario').value;
   const pw = document.getElementById('password').value;
