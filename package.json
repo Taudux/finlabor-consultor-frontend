@@ -28,7 +28,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "YaelPerez",
+        "owner": "Taudux",
         "repo": "finlabor-consultor-frontend"
       }
     ],
