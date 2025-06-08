@@ -8,6 +8,8 @@ const fs = require('fs');
 const https = require('https');
 const { fetch, FormData } = require('undici');
 const { Blob } = require('buffer');  // Importa Blob de Node.js
+const { signBody } = require('./signKJUR');
+const XLSX = require('xlsx');
 
 let mainWindow;
 
@@ -34,6 +36,12 @@ function createWindow() {
 
   mainWindow.setMenu(null);
   mainWindow.loadFile('index.html');
+  //SHORTCUT PARA ABRIR DEVTOOLS
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' && input.type === 'keyDown') {
+      mainWindow.webContents.openDevTools({ mode: 'detach' }); // o 'right'
+    }
+  });
 
   //Ruta del logo para enviarla al renderer
   const logoPath = path.join(__dirname, 'build', 'finlabor_logo-removebg-preview.png');
@@ -217,7 +225,8 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
     const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     formDataNode.append('file', fileBlob, path.basename(filePath));
 
-    const response = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', {
+    // const response = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL PRODUCTIVA
+    const response = await fetch('https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld', { // URL DE DESARROLLO
       method: 'POST',
       body: formDataNode
     });
@@ -235,3 +244,67 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
     return { success: false, error: err.message };
   }
 });
+
+ipcMain.handle('consulta-circulo', async (event, {apiUrl, payload, privateKey, apiKey, usuario, password}) => {
+  try{
+
+    const bodyString = JSON.stringify(payload);
+    const signature = signBody(bodyString, privateKey);
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-signature': signature,
+      'x-api-key': apiKey,
+      'username': usuario,
+      'password': password
+    };
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers,
+      body: bodyString
+    });
+
+    const result = await response.json();
+    return {success: true, data: result};
+
+  } catch (error) {
+    console.error('Error en consulta-circulo:', error);
+    return { success: false, error: error.message };
+  }
+})
+
+ipcMain.handle('leer-excel', async (event, filePath) => {
+  try {
+    // Lee el archivo Excel
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Convierte hoja a array de objetos
+    const rows = XLSX.utils.sheet_to_json(worksheet, {defval:''});
+
+    // Mapea cada fila al formato requerido
+    const payloads = rows.map(row => ({
+      apellidoPaterno: row['apellidoPaterno'] || '',
+      apellidoMaterno: row['apellidoMaterno'] || '',
+      primerNombre: row['primerNombre'] || '',
+      fechaNacimiento: row['fechaNacimiento'] || '',
+      RFC: row['RFC'] || '',
+      nacionalidad: row['nacionalidad'] || 'MX',
+      domicilio: {
+        direccion: row['direccion'] || '',
+        coloniaPoblacion: row['coloniaPoblacion'] || '',
+        delegacionMunicipio: row['delegacionMunicipio'] || '',
+        ciudad: row['ciudad'] || '',
+        estado: row['estado'] || '',
+        CP: String(row['CP'] || '') // Para mantener ceros a la izquierda
+      }
+    }));
+
+    return {success: true, payloads};
+
+  } catch (error){
+    console.error('Error leyendo el archivo Excel:', error);
+    return { success: false, error: error.message };
+  }
+})
