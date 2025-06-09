@@ -10,6 +10,8 @@ const { fetch, FormData } = require('undici');
 const { Blob } = require('buffer');  // Importa Blob de Node.js
 const { signBody } = require('./signKJUR');
 const XLSX = require('xlsx');
+const {obtenerClaveEstado, normalizarFecha} = require('./funcionesConsulta');
+
 
 let mainWindow;
 
@@ -221,8 +223,8 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
 
     const backendResponse = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL DEL BACK END PARA CREAR EXCEL DE RESULTADO
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({respuestas:responses})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ respuestas: responses })
     });
 
     if (!backendResponse.ok) {
@@ -239,9 +241,20 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
   }
 });
 
-ipcMain.handle('consulta-circulo', async (event, {apiUrl, payload, privateKey, apiKey, usuario, password}) => {
-  try{
+ipcMain.handle('consulta-circulo', async (event, { apiUrl, payload, privateKey, apiKey, usuario, password }) => {
+  try {
 
+    /*VALIDACION DE CLAVE ESTADO */
+    let estado = payload['domicilio']['estado'];
+    if(estado.length > 4){
+      payload['domicilio']['estado'] = obtenerClaveEstado(estado);
+    }
+
+    /*VALIDACION DE LAS FECHAS */
+    let fechaNacimiento = payload['fechaNacimiento'];
+    payload['fechaNacimiento'] = normalizarFecha(fechaNacimiento);
+
+    console.log('Payload antes de solicitar historial: ', payload);
     const bodyString = JSON.stringify(payload);
     const signature = signBody(bodyString, privateKey);
     const headers = {
@@ -259,7 +272,7 @@ ipcMain.handle('consulta-circulo', async (event, {apiUrl, payload, privateKey, a
     });
 
     const result = await response.json();
-    return {success: true, data: result};
+    return { success: true, data: result };
 
   } catch (error) {
     console.error('Error en consulta-circulo:', error);
@@ -273,9 +286,9 @@ ipcMain.handle('leer-excel', async (event, filePath) => {
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
+
     // Convierte hoja a array de objetos
-    const rows = XLSX.utils.sheet_to_json(worksheet, {defval:''});
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
     // Mapea cada fila al formato requerido
     const payloads = rows.map(row => ({
@@ -295,9 +308,9 @@ ipcMain.handle('leer-excel', async (event, filePath) => {
       }
     }));
 
-    return {success: true, payloads};
+    return { success: true, payloads };
 
-  } catch (error){
+  } catch (error) {
     console.error('Error leyendo el archivo Excel:', error);
     return { success: false, error: error.message };
   }

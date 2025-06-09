@@ -31,7 +31,7 @@ document.getElementById('select-excel').addEventListener('click', async () => {
         overlay.style.display = "flex";
     const result = await window.electronAPI.leerExcel(filePath); //REGRESA UN ARREGLO CON TODOS LOS JSONS PARA REALIZAR CONSULTAS AL API
     if (result.success) {
-        console.log('Payloads generados:', result.payloads);
+        console.log('Payloads generados correctamente desde excel: ', result.payloads);
     }
 
     for (let i = 0; i < result.payloads.length; i++) {
