@@ -206,7 +206,7 @@ ipcMain.handle('guardar-archivo-procesado', async (event, outputFilePath, arrayB
   }
 });
 
-ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) => {
+ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
   try {
     const dir = path.dirname(filePath);
     const ext = path.extname(filePath);
@@ -218,24 +218,18 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, us, pw, pk, ak }) =
 
     const fileBuffer = fs.readFileSync(filePath);
     const formDataNode = new FormData();
-    formDataNode.append('us', us);
-    formDataNode.append('pw', pw);
-    formDataNode.append('pk', pk);
-    formDataNode.append('ak', ak);
-    const fileBlob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    formDataNode.append('file', fileBlob, path.basename(filePath));
 
-    // const response = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL PRODUCTIVA
-    const response = await fetch('https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld', { // URL DE DESARROLLO
+    const backendResponse = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL DEL BACK END PARA CREAR EXCEL DE RESULTADO
       method: 'POST',
-      body: formDataNode
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({respuestas:responses})
     });
 
-    if (!response.ok) {
-      throw new Error(`Error en backend: ${response.status} ${response.statusText}`);
+    if (!backendResponse.ok) {
+      throw new Error(`Error en backend: ${backendResponse.status} ${backendResponse.statusText}`);
     }
 
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await backendResponse.arrayBuffer();
     fs.writeFileSync(outputFilePath, Buffer.from(arrayBuffer));
 
     return { success: true, outputFilePath };
