@@ -10,7 +10,7 @@ const { fetch, FormData } = require('undici');
 const { Blob } = require('buffer');  // Importa Blob de Node.js
 const { signBody } = require('./signKJUR');
 const XLSX = require('xlsx');
-const {obtenerClaveEstado, normalizarFecha} = require('./funcionesConsulta');
+const {obtenerClaveEstado, normalizarFecha, excelSerialToDateString} = require('./funcionesConsulta');
 
 
 let mainWindow;
@@ -249,6 +249,10 @@ ipcMain.handle('consulta-circulo', async (event, { apiUrl, payload, privateKey, 
     if(estado.length > 4){
       payload['domicilio']['estado'] = obtenerClaveEstado(estado);
     }
+
+    /*VALIDACION DEL FORMATO DE LA FECHA */
+    let serialFecha = payload['fechaNacimiento'];
+    payload['fechaNacimiento'] = excelSerialToDateString(serialFecha);
 
     /*VALIDACION DE LAS FECHAS */
     let fechaNacimiento = payload['fechaNacimiento'];

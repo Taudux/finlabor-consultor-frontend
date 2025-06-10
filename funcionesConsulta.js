@@ -73,4 +73,20 @@ function normalizarFecha(fecha) {
     return `${anioStr}-${mesStr}-${diaStr}`;
 }
 
-module.exports = { obtenerClaveEstado, normalizarFecha };
+function excelSerialToDateString(serial) {
+    // Excel empieza en 1 de enero de 1900
+    // Pero Excel cuenta 1900 como bisiesto por error, por eso el +1
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    if (typeof serial !== 'number'){ 
+        console.log('LA FECHA TIENE ESTE FORMATO: ', serial);
+        return serial
+    };
+    const days = Math.floor(serial);
+    excelEpoch.setUTCDate(excelEpoch.getUTCDate() + days);
+    const yyyy = excelEpoch.getUTCFullYear();
+    const mm = String(excelEpoch.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(excelEpoch.getUTCDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+module.exports = { obtenerClaveEstado, normalizarFecha, excelSerialToDateString };

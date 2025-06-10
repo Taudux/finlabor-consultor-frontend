@@ -31,7 +31,7 @@ document.getElementById('select-excel').addEventListener('click', async () => {
         overlay.style.display = "flex";
     const result = await window.electronAPI.leerExcel(filePath); //REGRESA UN ARREGLO CON TODOS LOS JSONS PARA REALIZAR CONSULTAS AL API
     if (result.success) {
-        console.log('Payloads generados correctamente desde excel: ', result.payloads);
+        console.log('Payloads generados desde excel: ', result.payloads);
     }
 
     for (let i = 0; i < result.payloads.length; i++) {
@@ -60,7 +60,7 @@ document.getElementById('select-excel').addEventListener('click', async () => {
         const { filePath } = fileResult;
         const backendResult = await window.electronAPI.procesarArchivo(filePath, responses);
 
-        if (result.success) {
+        if (result.success && backendResult.success) {
             alert(`✅ Archivo procesado correctamente y guardado en:\n${backendResult.outputFilePath}`);
         } else {
             alert(`❌ Ocurrió un error al procesar el archivo:\n${backendResult.error}`);
