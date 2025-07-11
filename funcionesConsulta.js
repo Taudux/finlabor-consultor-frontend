@@ -37,7 +37,7 @@ function normalizarFecha(fecha) {
 
     // Divide la fecha en partes usando el guion como separador
     const partes = fecha.split('-');
-    if (partes.length !== 3) { 
+    if (partes.length !== 3) {
         console.log('ERROR EN EL FORMATO DE LA FECHA: FALTA EL MES, EL DIA O EL AÑO');
         return '';
     }
@@ -77,7 +77,7 @@ function excelSerialToDateString(serial) {
     // Excel empieza en 1 de enero de 1900
     // Pero Excel cuenta 1900 como bisiesto por error, por eso el +1
     const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-    if (typeof serial !== 'number'){ 
+    if (typeof serial !== 'number') {
         console.log('LA FECHA TIENE ESTE FORMATO: ', serial);
         return serial
     };
@@ -89,4 +89,9 @@ function excelSerialToDateString(serial) {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-module.exports = { obtenerClaveEstado, normalizarFecha, excelSerialToDateString };
+function limpiarDireccion(texto) {
+    if (typeof texto !== 'string') return '';
+    return texto.replace(/\s+/g, ' ').trim();
+}
+
+module.exports = { obtenerClaveEstado, normalizarFecha, excelSerialToDateString, limpiarDireccion };

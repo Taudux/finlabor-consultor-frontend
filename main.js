@@ -10,7 +10,7 @@ const { fetch, FormData } = require('undici');
 const { Blob } = require('buffer');  // Importa Blob de Node.js
 const { signBody } = require('./signKJUR');
 const XLSX = require('xlsx');
-const {obtenerClaveEstado, normalizarFecha, excelSerialToDateString} = require('./funcionesConsulta');
+const {obtenerClaveEstado, normalizarFecha, excelSerialToDateString, limpiarDireccion} = require('./funcionesConsulta');
 
 
 let mainWindow;
@@ -257,6 +257,10 @@ ipcMain.handle('consulta-circulo', async (event, { apiUrl, payload, privateKey, 
     /*VALIDACION DE LAS FECHAS */
     let fechaNacimiento = payload['fechaNacimiento'];
     payload['fechaNacimiento'] = normalizarFecha(fechaNacimiento);
+
+    /*ELIMINACION DE ESPACIOS INNECESARIOS EN EL CAMPO DE DIRECCION */
+    let direccion = payload["domicilio"]["direccion"];
+    payload["domicilio"]["direccion"] = limpiarDireccion(direccion);
 
     console.log('Payload antes de solicitar historial: ', payload);
     const bodyString = JSON.stringify(payload);

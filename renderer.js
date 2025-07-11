@@ -12,8 +12,8 @@ document.getElementById('select-excel').addEventListener('click', async () => {
     const ak = document.getElementById('apikey').value;
     const overlay = document.getElementById('overlay');
     let responses = new Array();
-    // const apiUrl = 'https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (DESARROLLO)
-    const apiUrl = 'https://services.circulodecredito.com.mx/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (PRODUCCION)
+    const apiUrl = 'https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (DESARROLLO)
+    //const apiUrl = 'https://services.circulodecredito.com.mx/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (PRODUCCION)
 
     if (!us || !pw || !pk || !ak) {
         alert("Por favor completa todos los campos antes de continuar.");
