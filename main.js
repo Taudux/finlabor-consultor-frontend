@@ -357,8 +357,8 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
     const fileBuffer = fs.readFileSync(filePath);
     const formDataNode = new FormData();
 
-    const backendResponse = await fetch('https://finlabor-consultor-backend-qa.onrender.com/consultar', { // URL QA DEL BACK END PARA CREAR EXCEL DE RESULTADO
-      // const backendResponse = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL PRODUCTIVA DEL BACK END PARA CREAR EXCEL DE RESULTADO
+    // const backendResponse = await fetch('https://finlabor-consultor-backend-qa.onrender.com/consultar', { // URL QA DEL BACK END PARA CREAR EXCEL DE RESULTADO
+      const backendResponse = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL PRODUCTIVA DEL BACK END PARA CREAR EXCEL DE RESULTADO
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ respuestas: responses })
