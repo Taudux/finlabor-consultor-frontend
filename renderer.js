@@ -5,6 +5,14 @@ window.electronAPI.onSetLogo((event, logoPath) => {
     }
 });
 
+function nombrePersonaDesdePayload(p = {}) {
+    const n = (p.primerNombre || '').trim();
+    const ap = (p.apellidoPaterno || '').trim();
+    const am = (p.apellidoMaterno || '').trim();
+    const full = [n, ap, am].filter(Boolean).join(' ');
+    return full || 'esta persona';
+}
+
 document.getElementById('select-excel').addEventListener('click', async () => {
     const us = document.getElementById('usuario').value;
     const pw = document.getElementById('password').value;
@@ -12,8 +20,8 @@ document.getElementById('select-excel').addEventListener('click', async () => {
     const ak = document.getElementById('apikey').value;
     const overlay = document.getElementById('overlay');
     let responses = new Array();
-    // const apiUrl = 'https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (DESARROLLO)
-    const apiUrl = 'https://services.circulodecredito.com.mx/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (PRODUCCION)
+    const apiUrl = 'https://omtaxzvaqb.execute-api.us-east-1.amazonaws.com/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (DESARROLLO)
+    // const apiUrl = 'https://services.circulodecredito.com.mx/v1/rcc-ficoscore-pld'; //URL DE CONSULTA A CIRCULO (PRODUCCION)
 
     if (!us || !pw || !pk || !ak) {
         alert("Por favor completa todos los campos antes de continuar.");
@@ -28,7 +36,7 @@ document.getElementById('select-excel').addEventListener('click', async () => {
 
     const { filePath } = fileResult;
     // Mostrar overlay de carga
-        overlay.style.display = "flex";
+    overlay.style.display = "flex";
     const result = await window.electronAPI.leerExcel(filePath); //REGRESA UN ARREGLO CON TODOS LOS JSONS PARA REALIZAR CONSULTAS AL API
     if (result.success) {
         console.log('Payloads generados desde excel: ', result.payloads);
@@ -44,8 +52,28 @@ document.getElementById('select-excel').addEventListener('click', async () => {
                 //alert("Respuesta de Círculo:\n" + JSON.stringify(resultado.data, null, 2));
                 responses[i] = resultado.data;
             } else {
-                alert('❌ Error en la consulta:\n' + resultado.error);
-                console.error(resultado.error);
+                const nombre = nombrePersonaDesdePayload(payload);
+
+                // Intenta mostrar bonito el formato de Círculo: { errores: [{ codigo, mensaje }, ...] }
+                let detalle = '';
+                const raw = resultado.raw;
+                if (raw && typeof raw === 'object' && Array.isArray(raw.errores) && raw.errores.length) {
+                    detalle = raw.errores
+                        .map(e => `${e.codigo || '—'} – ${e.mensaje || '—'}`)
+                        .join('\n• ');
+                } else if (typeof raw === 'string') {
+                    detalle = raw.slice(0, 400);
+                } else if (resultado.error) {
+                    detalle = resultado.error;
+                }
+
+                alert(`❌ Error al consultar a ${nombre} (HTTP ${resultado.status ?? '—'}):\n${detalle}`);
+                console.error('Respuesta completa del error:', resultado);
+
+                // Log completo para depuración
+                console.error('Detalle técnico (raw):',
+                    typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2)
+                );
             }
         } catch (error) {
             alert('❌ Error inesperado en la consulta del historial:\n' + error.message);
