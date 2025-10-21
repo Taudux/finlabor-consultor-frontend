@@ -50,7 +50,7 @@ document.getElementById('select-excel').addEventListener('click', async () => {
 
             if (resultado.success) {
                 //alert("Respuesta de Círculo:\n" + JSON.stringify(resultado.data, null, 2));
-                responses[i] = resultado.data;
+                responses.push(resultado.data);
             } else {
                 const nombre = nombrePersonaDesdePayload(payload);
 
@@ -81,6 +81,15 @@ document.getElementById('select-excel').addEventListener('click', async () => {
         }
     }
 
+
+    
+    const usuarioValor = (us || '').trim();
+    responses = responses.map(response => {
+        if(response && typeof response === 'object'){
+            return {...response, usuario:usuarioValor}
+        }
+        return response;
+    });
     console.log('ARREGLO DE RESPUESTAS CREADO -> ', responses);
 
     try {

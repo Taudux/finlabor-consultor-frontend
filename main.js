@@ -14,8 +14,8 @@ const { obtenerClaveEstado, normalizarFecha, excelSerialToDateString, limpiarDir
 const os = require('os');
 const crypto = require('crypto');
 
-const BACKEND_BASE_URL = "https://finlabor-consultor-backend-qa.onrender.com"; //URL DE QA
-// const BACKEND_BASE_URL = "https://finlabor-consultor-backend.onrender.com"; //URL DE PRODUCCION
+// const BACKEND_BASE_URL = "https://finlabor-consultor-backend-qa.onrender.com"; //URL DE QA
+const BACKEND_BASE_URL = "https://finlabor-consultor-backend.onrender.com"; //URL DE PRODUCCION
 let LOG_ENDPOINT = null;
 let LOG_BEARER = null;
 let LOG_TOKEN_EXP = 0;
