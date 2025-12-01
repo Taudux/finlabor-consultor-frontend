@@ -323,7 +323,7 @@ ipcMain.handle('select-excel-file', async () => {
     const dir = path.dirname(filePath);
     const ext = path.extname(filePath);
     const base = path.basename(filePath, ext);
-    const newFileName = `${base}_Consulta${ext}`;
+    const newFileName = `${base}_Consulta.xlsm`;
     const outputPath = path.join(dir, newFileName);
 
     console.log('Archivo seleccionado:', filePath);
@@ -349,7 +349,7 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
     const dir = path.dirname(filePath);
     const ext = path.extname(filePath);
     const base = path.basename(filePath, ext);
-    const outputFileName = `${base}_Consulta${ext}`;
+    const outputFileName = `${base}_Consulta.xlsm`;
     const outputFilePath = path.join(dir, outputFileName);
 
     console.log('Archivo resultado:', outputFilePath);
