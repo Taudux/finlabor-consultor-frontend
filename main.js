@@ -354,9 +354,6 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
 
     console.log('Archivo resultado:', outputFilePath);
 
-    const fileBuffer = fs.readFileSync(filePath);
-    const formDataNode = new FormData();
-
     // const backendResponse = await fetch('https://finlabor-consultor-backend-qa.onrender.com/consultar', { // URL QA DEL BACK END PARA CREAR EXCEL DE RESULTADO
       const backendResponse = await fetch('https://finlabor-consultor-backend.onrender.com/consultar', { // URL PRODUCTIVA DEL BACK END PARA CREAR EXCEL DE RESULTADO
       method: 'POST',
@@ -364,8 +361,32 @@ ipcMain.handle('procesar-archivo', async (event, { filePath, responses }) => {
       body: JSON.stringify({ respuestas: responses })
     });
 
+    const contentType = backendResponse.headers.get('content-type') || '';
+
+    // Si el backend respondió JSON, lo interpretamos como error y NO generamos archivo
+    if (contentType.includes('application/json')) {
+      let json = null;
+      try {
+        json = await backendResponse.json();
+      } catch (e) {
+        // ignoramos error de parseo
+      }
+
+      const msg =
+        (json && (json.error || json.message)) ||
+        `El backend devolvió JSON con status ${backendResponse.status}`;
+
+      throw new Error(msg);
+    }
+
     if (!backendResponse.ok) {
-      throw new Error(`Error en backend: ${backendResponse.status} ${backendResponse.statusText}`);
+      let detalle = '';
+      try {
+        detalle = await backendResponse.text();
+      } catch (e) {
+        detalle = '';
+      }
+      throw new Error(`Error en backend (${backendResponse.status}): ${detalle}`);
     }
 
     const arrayBuffer = await backendResponse.arrayBuffer();
